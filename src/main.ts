@@ -28,8 +28,8 @@ async function bootstrap() {
 
   await app.listen(3000);
 
-  console.log('🚀 API: http://localhost:3000/api');
-  console.log('📘 Swagger: http://localhost:3000/docs');
+  console.log('API: http://localhost:3000/api');
+  console.log('Swagger: http://localhost:3000/docs');
 }
 
 void bootstrap();
