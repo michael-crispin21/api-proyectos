@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id              Int      @id @default(autoincrement())
+  nombre          String
+  email           String   @unique
+  activo          Boolean  @default(true)
+  fechaCreacion   DateTime @default(now())
+  fechaActualiza  DateTime @updatedAt
+
+  // Relaciones
+  proyectosCreados    Proyecto[] @relation("Creador")
+  proyectosEjecutados Proyecto[] @relation("Ejecutor")
+  tareasAsignadas     Tarea[]    @relation("Asigna")
+  tareasRecibidas     Tarea[]    @relation("Asignado")
+}
+
+model Proyecto {
+  id                Int      @id @default(autoincrement())
+  nombre            String
+  descripcion       String
+  fechaCreacion     DateTime @default(now())
+  fechaActualiza    DateTime @updatedAt
+
+  // Llaves foráneas
+  idUsuarioCreador  Int
+  idUsuarioEjecutor Int
+
+  // Relaciones
+  creador Usuario @relation("Creador", fields: [idUsuarioCreador], references: [id])
+  ejecutor Usuario @relation("Ejecutor", fields: [idUsuarioEjecutor], references: [id])
+
+  tareas Tarea[]
+  
+  @@unique([nombre, idUsuarioCreador])
+}
+
+enum EstadoTarea {
+  pendiente
+  en_curso
+  terminado
+  cancelado
+}
+
+model Tarea {
+  id                  Int          @id @default(autoincrement())
+  descripcion         String
+  estado              EstadoTarea  @default(pendiente)
+  fechaCreacion       DateTime     @default(now())
+  fechaActualiza      DateTime     @updatedAt
+
+  // Llaves foráneas
+  idProyecto          Int
+  idUsuarioAsigna     Int
+  idUsuarioAsignado   Int
+
+  // Relaciones
+  proyecto  Proyecto @relation(fields: [idProyecto], references: [id], onDelete: Cascade)
+  asigna    Usuario  @relation("Asigna", fields: [idUsuarioAsigna], references: [id])
+  asignado  Usuario  @relation("Asignado", fields: [idUsuarioAsignado], references: [id])
+}
