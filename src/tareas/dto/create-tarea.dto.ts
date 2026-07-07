@@ -1,39 +1,28 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { EstadoTarea } from '@prisma/client';
-import { IsEnum, IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateTareaDto {
+
   @ApiProperty({
     example: 'Crear módulo de Login',
   })
   @IsString()
   @IsNotEmpty()
-  descripcion: string;
+  descripcion!: string;
 
   @ApiProperty({
     example: 1,
+    description: 'Proyecto al que pertenece la tarea',
   })
   @IsInt()
-  idProyecto: number;
+  idProyecto!: number;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 1,
-    description: 'Usuario que asigna',
+    nullable: true,
+    description: 'Usuario que crea/asigna inicialmente la tarea. Puede ir en null o como "Sin_asignar" para una tarea sin asignador.',
   })
-  @IsInt()
-  idUsuarioAsigna: number;
+  @IsOptional()
+  idUsuarioAsigna?: number | null | string;
 
-  @ApiProperty({
-    example: 3,
-    description: 'Usuario que recibe la tarea',
-  })
-  @IsInt()
-  idUsuarioAsignado: number;
-
-  @ApiProperty({
-    enum: EstadoTarea,
-    example: EstadoTarea.pendiente,
-  })
-  @IsEnum(EstadoTarea)
-  estado: EstadoTarea;
 }

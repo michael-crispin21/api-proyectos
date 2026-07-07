@@ -1,12 +1,25 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProyectosService } from './proyectos.service';
+import { PrismaService } from '../prisma/prisma.service';
 
 describe('ProyectosService', () => {
   let service: ProyectosService;
+  let prisma: {
+    usuario: { findUnique: jest.Mock };
+    proyecto: { findFirst: jest.Mock; create: jest.Mock };
+  };
 
   beforeEach(async () => {
+    prisma = {
+      usuario: { findUnique: jest.fn() },
+      proyecto: { findFirst: jest.fn(), create: jest.fn() },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ProyectosService],
+      providers: [
+        ProyectosService,
+        { provide: PrismaService, useValue: prisma },
+      ],
     }).compile();
 
     service = module.get<ProyectosService>(ProyectosService);
@@ -14,5 +27,35 @@ describe('ProyectosService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  it('should create a project without executor', async () => {
+    prisma.usuario.findUnique.mockResolvedValueOnce({ id: 1 });
+    prisma.proyecto.findFirst.mockResolvedValueOnce(null);
+    prisma.proyecto.create.mockResolvedValueOnce({
+      id: 10,
+      nombre: 'Proyecto_1',
+      descripcion: 'Proyecto_1',
+      idUsuarioCreador: 1,
+      idUsuarioEjecutor: null,
+    });
+
+    const result = await service.create({
+      nombre: 'Proyecto_1',
+      descripcion: 'Proyecto_1',
+      idUsuarioCreador: 1,
+    } as any);
+
+    expect(prisma.usuario.findUnique).toHaveBeenCalledWith({
+      where: { id: 1 },
+    });
+    expect(prisma.proyecto.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        nombre: 'Proyecto_1',
+        descripcion: 'Proyecto_1',
+        idUsuarioCreador: 1,
+      }),
+    });
+    expect(result.idUsuarioEjecutor).toBeNull();
   });
 });

@@ -36,5 +36,21 @@ CREATE TABLE "Tarea" (
     CONSTRAINT "Tarea_idUsuarioAsignado_fkey" FOREIGN KEY ("idUsuarioAsignado") REFERENCES "Usuario" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
 );
 
+-- CreateTable
+CREATE TABLE "Historico" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "idTarea" INTEGER NOT NULL,
+    "idUsuarioAccion" INTEGER NOT NULL,
+    "accion" TEXT NOT NULL,
+    "valorAnterior" TEXT,
+    "valorNuevo" TEXT NOT NULL,
+    "fecha" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Historico_idTarea_fkey" FOREIGN KEY ("idTarea") REFERENCES "Tarea" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Historico_idUsuarioAccion_fkey" FOREIGN KEY ("idUsuarioAccion") REFERENCES "Usuario" ("id") ON DELETE RESTRICT ON UPDATE CASCADE
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Usuario_email_key" ON "Usuario"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Proyecto_nombre_idUsuarioCreador_key" ON "Proyecto"("nombre", "idUsuarioCreador");

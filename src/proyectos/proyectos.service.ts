@@ -18,31 +18,41 @@ export class ProyectosService {
       throw new NotFoundException('El usuario creador no existe');
     }
 
-    const ejecutor = await this.prisma.usuario.findUnique({
-      where: {
-        id: createProyectoDto.idUsuarioEjecutor,
-      },
-    });
-
-    if (!ejecutor) {
-      throw new NotFoundException('El usuario ejecutor no existe');
+    if (createProyectoDto.idUsuarioEjecutor) {
+      const ejecutor = await this.prisma.usuario.findUnique({
+        where: {
+          id: createProyectoDto.idUsuarioEjecutor,
+        },
+      });
+      if (!ejecutor) {
+        throw new NotFoundException('El usuario ejecutor no existe');
+      }
     }
+
     const proyectoExiste = await this.prisma.proyecto.findFirst({
-    where: {
+      where: {
         nombre: createProyectoDto.nombre,
         idUsuarioCreador: createProyectoDto.idUsuarioCreador,
-        },
+      },
     });
     if (proyectoExiste) {
-    throw new ConflictException(
+      throw new ConflictException(
         'Ya tienes un proyecto con ese nombre',
-         );
+      );
     }
+    const data = {
+      nombre: createProyectoDto.nombre,
+      descripcion: createProyectoDto.descripcion,
+      idUsuarioCreador: createProyectoDto.idUsuarioCreador,
+      ...(createProyectoDto.idUsuarioEjecutor !== undefined
+        ? { idUsuarioEjecutor: createProyectoDto.idUsuarioEjecutor }
+        : {}),
+    };
+
     return await this.prisma.proyecto.create({
-      data: createProyectoDto,
+      data,
     });
   }
-
   async findAll() {
     return await this.prisma.proyecto.findMany({
       include: {
@@ -73,6 +83,37 @@ export class ProyectosService {
   async remove(id: number) {
     return await this.prisma.proyecto.delete({
       where: { id },
+    });
+  }
+
+  // ===========================
+  // ENDPOINT PARA EL TALLER
+  // ===========================
+  async taller(id: number) {
+    return await this.prisma.proyecto.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        creador: true,
+        ejecutor: true,
+
+        tareas: {
+          include: {
+            asigna: true,
+            asignado: true,
+
+            historicos: {
+              include: {
+                usuarioAccion: true,
+              },
+              orderBy: {
+                fecha: 'asc',
+              },
+            },
+          },
+        },
+      },
     });
   }
 }

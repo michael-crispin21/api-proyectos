@@ -1,7 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,61 +8,87 @@ datasource db {
 }
 
 model Usuario {
-  id              Int      @id @default(autoincrement())
-  nombre          String
-  email           String   @unique
-  activo          Boolean  @default(true)
-  fechaCreacion   DateTime @default(now())
-  fechaActualiza  DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  email          String   @unique
+  activo         Boolean  @default(true)
+  fechaCreacion  DateTime @default(now())
+  fechaActualiza DateTime @updatedAt
 
-  // Relaciones
   proyectosCreados    Proyecto[] @relation("Creador")
   proyectosEjecutados Proyecto[] @relation("Ejecutor")
-  tareasAsignadas     Tarea[]    @relation("Asigna")
-  tareasRecibidas     Tarea[]    @relation("Asignado")
+
+  tareasAsignadas Tarea[] @relation("Asigna")
+  tareasRecibidas Tarea[] @relation("Asignado")
+
+  historicos Historico[]
 }
 
 model Proyecto {
-  id                Int      @id @default(autoincrement())
-  nombre            String
-  descripcion       String
-  fechaCreacion     DateTime @default(now())
-  fechaActualiza    DateTime @updatedAt
+  id             Int      @id @default(autoincrement())
+  nombre         String
+  descripcion    String
+  fechaCreacion  DateTime @default(now())
+  fechaActualiza DateTime @updatedAt
 
-  // Llaves foráneas
   idUsuarioCreador  Int
-  idUsuarioEjecutor Int
+  idUsuarioEjecutor Int?
 
-  // Relaciones
-  creador Usuario @relation("Creador", fields: [idUsuarioCreador], references: [id])
-  ejecutor Usuario @relation("Ejecutor", fields: [idUsuarioEjecutor], references: [id])
+  creador  Usuario @relation("Creador", fields: [idUsuarioCreador], references: [id])
+  ejecutor Usuario? @relation("Ejecutor", fields: [idUsuarioEjecutor], references: [id])
 
   tareas Tarea[]
-  
+
   @@unique([nombre, idUsuarioCreador])
 }
 
 enum EstadoTarea {
+  por_asignar
   pendiente
   en_curso
   terminado
   cancelado
 }
 
+enum AccionHistorico {
+  asignacion
+  cambio_estado
+  reasignacion
+}
+
 model Tarea {
-  id                  Int          @id @default(autoincrement())
-  descripcion         String
-  estado              EstadoTarea  @default(pendiente)
-  fechaCreacion       DateTime     @default(now())
-  fechaActualiza      DateTime     @updatedAt
+  id          Int         @id @default(autoincrement())
+  descripcion String
+  estado      EstadoTarea @default(por_asignar)
 
-  // Llaves foráneas
-  idProyecto          Int
-  idUsuarioAsigna     Int
-  idUsuarioAsignado   Int
+  fechaCreacion  DateTime @default(now())
+  fechaActualiza DateTime @updatedAt
 
-  // Relaciones
-  proyecto  Proyecto @relation(fields: [idProyecto], references: [id], onDelete: Cascade)
-  asigna    Usuario  @relation("Asigna", fields: [idUsuarioAsigna], references: [id])
-  asignado  Usuario  @relation("Asignado", fields: [idUsuarioAsignado], references: [id])
+  idProyecto        Int
+  idUsuarioAsigna   Int?
+  idUsuarioAsignado Int?
+
+  proyecto Proyecto @relation(fields: [idProyecto], references: [id], onDelete: Cascade)
+
+  asigna Usuario? @relation("Asigna", fields: [idUsuarioAsigna], references: [id])
+
+  asignado Usuario? @relation("Asignado", fields: [idUsuarioAsignado], references: [id])
+
+  historicos Historico[]
+}
+
+model Historico {
+  id Int @id @default(autoincrement())
+
+  idTarea         Int
+  idUsuarioAccion Int
+
+  accion AccionHistorico
+
+  valorAnterior String?
+  valorNuevo    String
+
+  fecha DateTime @default(now())
+  tarea Tarea @relation(fields: [idTarea], references: [id], onDelete: Cascade)
+  usuarioAccion Usuario @relation(fields: [idUsuarioAccion], references: [id])
 }

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsNotEmpty, IsString } from 'class-validator';
+import { IsInt, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class CreateProyectoDto {
   @ApiProperty({
@@ -26,7 +26,9 @@ export class CreateProyectoDto {
   @ApiProperty({
     example: 2,
     description: 'ID del usuario ejecutor',
+    required: false,
   })
+  @IsOptional()
   @IsInt()
-  idUsuarioEjecutor!: number;
+  idUsuarioEjecutor?: number;
 }
